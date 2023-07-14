@@ -14,6 +14,7 @@ from prompt_toolkit.formatted_text import AnyFormattedText
 from prompt_toolkit.key_binding.bindings.focus import focus_next, focus_previous
 from prompt_toolkit.key_binding.defaults import load_key_bindings
 from prompt_toolkit.key_binding.key_bindings import KeyBindings, merge_key_bindings
+from prompt_toolkit.key_binding.key_processor import KeyPressEvent
 from prompt_toolkit.layout import Layout
 from prompt_toolkit.layout.containers import AnyContainer, HSplit
 from prompt_toolkit.layout.dimension import Dimension as D
@@ -41,6 +42,8 @@ __all__ = [
     "progress_dialog",
 ]
 
+E = KeyPressEvent
+
 
 def yes_no_dialog(
     title: AnyFormattedText = "",
@@ -48,24 +51,25 @@ def yes_no_dialog(
     yes_text: str = "Yes",
     no_text: str = "No",
     style: BaseStyle | None = None,
+    addHotkeys: bool = False,
 ) -> Application[bool]:
     """
     Display a Yes/No dialog.
     Return a boolean.
     """
 
-    def yes_handler() -> None:
+    def yes_handler(event: E | None = None) -> None:
         get_app().exit(result=True)
 
-    def no_handler() -> None:
+    def no_handler(event: E | None = None) -> None:
         get_app().exit(result=False)
 
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=yes_text, handler=yes_handler),
-            Button(text=no_text, handler=no_handler),
+            Button(text=yes_text, handler=yes_handler, addHotkey=addHotkeys),
+            Button(text=no_text, handler=no_handler, addHotkey=addHotkeys),
         ],
         with_background=True,
     )
@@ -81,20 +85,21 @@ def button_dialog(
     text: AnyFormattedText = "",
     buttons: list[tuple[str, _T]] = [],
     style: BaseStyle | None = None,
+    addHotkeys: bool = False,
 ) -> Application[_T]:
     """
     Display a dialog with button choices (given as a list of tuples).
     Return the value associated with button.
     """
 
-    def button_handler(v: _T) -> None:
+    def button_handler(v: _T, event: E = None) -> None:
         get_app().exit(result=v)
 
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=t, handler=functools.partial(button_handler, v))
+            Button(text=t, handler=functools.partial(button_handler, v), addHotkey=addHotkeys)
             for t, v in buttons
         ],
         with_background=True,
@@ -113,21 +118,22 @@ def input_dialog(
     password: FilterOrBool = False,
     style: BaseStyle | None = None,
     default: str = "",
+    addHotkeys: bool = False,
 ) -> Application[str]:
     """
     Display a text input box.
     Return the given text, or None when cancelled.
     """
 
-    def accept(buf: Buffer) -> bool:
+    def accept(buf: Buffer, event: E | None = None) -> bool:
         get_app().layout.focus(ok_button)
         return True  # Keep text.
 
-    def ok_handler() -> None:
+    def ok_handler(event: E | None = None) -> None:
         get_app().exit(result=textfield.text)
 
-    ok_button = Button(text=ok_text, handler=ok_handler)
-    cancel_button = Button(text=cancel_text, handler=_return_none)
+    ok_button = Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys)
+    cancel_button = Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys)
 
     textfield = TextArea(
         text=default,
@@ -160,6 +166,7 @@ def message_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     style: BaseStyle | None = None,
+    addHotKey: bool = False,
 ) -> Application[None]:
     """
     Display a simple message box and wait until the user presses enter.
@@ -167,7 +174,7 @@ def message_dialog(
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=ok_text, handler=_return_none)],
+        buttons=[Button(text=ok_text, handler=_return_none, addHotkey=addHotkey)],
         with_background=True,
     )
 
@@ -182,6 +189,7 @@ def radiolist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default: _T | None = None,
     style: BaseStyle | None = None,
+    addHotkeys: bool = False,
 ) -> Application[_T]:
     """
     Display a simple list of element the user can choose amongst.
@@ -192,7 +200,7 @@ def radiolist_dialog(
     if values is None:
         values = []
 
-    def ok_handler() -> None:
+    def ok_handler(event: E | None = None) -> None:
         get_app().exit(result=radio_list.current_value)
 
     radio_list = RadioList(values=values, default=default)
@@ -204,8 +212,8 @@ def radiolist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler),
-            Button(text=cancel_text, handler=_return_none),
+            Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys),
+            Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys),
         ],
         with_background=True,
     )
@@ -221,6 +229,7 @@ def checkboxlist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default_values: Sequence[_T] | None = None,
     style: BaseStyle | None = None,
+    addHotkeys: bool = False,
 ) -> Application[list[_T]]:
     """
     Display a simple list of element the user can choose multiple values amongst.
@@ -231,7 +240,7 @@ def checkboxlist_dialog(
     if values is None:
         values = []
 
-    def ok_handler() -> None:
+    def ok_handler(event: E | None = None) -> None:
         get_app().exit(result=cb_list.current_values)
 
     cb_list = CheckboxList(values=values, default_values=default_values)
@@ -243,8 +252,8 @@ def checkboxlist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler),
-            Button(text=cancel_text, handler=_return_none),
+            Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys),
+            Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys),
         ],
         with_background=True,
     )
@@ -325,6 +334,6 @@ def _create_app(dialog: AnyContainer, style: BaseStyle | None) -> Application[An
     )
 
 
-def _return_none() -> None:
+def _return_none(event: E) -> None:
     "Button handler that returns None."
     get_app().exit()

@@ -14,6 +14,15 @@ def main():
 
     print(f"Result = {result}")
 
+    result = button_dialog(
+        title="Button dialog example",
+        text="Are you sure?",
+        buttons=[("Yes", True), ("No", False), ("Maybe...", None)],
+        addHotkeys=True
+    ).run()
+
+    print(f"Result = {result}")
+
 
 if __name__ == "__main__":
     main()

@@ -61,6 +61,13 @@ class Dialog:
             buttons_kb.add("left", filter=~first_selected)(focus_previous)
             buttons_kb.add("right", filter=~last_selected)(focus_next)
 
+        # Create a hotkey for every button where a hotkey is indicated.
+        for button in buttons:
+            if button.hotkeyPosition >= 0:
+                key = button.text[button.hotkeyPosition]
+                buttons_kb.add(key.upper())(button.handler)
+                buttons_kb.add(key.lower())(button.handler)
+
         frame_body: AnyContainer
         if buttons:
             frame_body = HSplit(

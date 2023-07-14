@@ -14,6 +14,7 @@ container object.
 """
 from __future__ import annotations
 
+from platform import system
 from functools import partial
 from typing import Callable, Generic, Sequence, TypeVar
 
@@ -391,7 +392,12 @@ class Button:
         parameters are passed to this callable. Use for instance Python's
         `functools.partial` to pass parameters to this callable if needed.
     :param width: Width of the button.
+    :param addHotkey: Whether to set a hotkey for the button; default = False.
+        If True, the creator can indicate the hotkey by including the
+        HOTKEY_INDICATOR symbol in the button text, as in text="Open &File".
+        By default the first letter of the text will be used.
     """
+    HOTKEY_INDICATOR = '&'
 
     def __init__(
         self,
@@ -400,8 +406,19 @@ class Button:
         width: int = 12,
         left_symbol: str = "<",
         right_symbol: str = ">",
+        addHotkey: bool = False,
     ) -> None:
-        self.text = text
+
+        if addHotkey:
+            if Button.HOTKEY_INDICATOR in text:
+                self.hotkeyPosition = text.index(Button.HOTKEY_INDICATOR)
+            else:
+                text = '{}{}'.format(Button.HOTKEY_INDICATOR, text)
+                self.hotkeyPosition = 0
+        else:
+            self.hotkeyPosition = -1
+
+        self.text = text.replace(Button.HOTKEY_INDICATOR, '')
         self.left_symbol = left_symbol
         self.right_symbol = right_symbol
         self.handler = handler
@@ -435,6 +452,7 @@ class Button:
         )
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
+        offset = (self.width - 2 - len(self.text)) // 2
         width = self.width - (
             get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol)
         )
@@ -447,12 +465,25 @@ class Button:
             ):
                 self.handler()
 
-        return [
-            ("class:button.arrow", self.left_symbol, handler),
-            ("[SetCursorPosition]", ""),
-            ("class:button.text", text, handler),
-            ("class:button.arrow", self.right_symbol, handler),
-        ]
+        if self.hotkeyPosition >= 0:
+            # Provide a visual clue as to the hotkey
+            highlight = 'fg:red bg:yellow' if system() == 'Windows' else 'underline'
+            return [
+                ('class:button.arrow', self.left_symbol, handler),
+                ('[SetCursorPosition]', ''),
+                ('class:button.text', text[: self.hotkeyPosition + offset], handler),
+                (highlight, text[self.hotkeyPosition + offset], handler),
+                ('class:button.text', text[self.hotkeyPosition + offset + 1 :], handler),
+                ('class:button.arrow', self.right_symbol, handler),
+                    ]
+        else:
+            # There is no hotkey
+            return [
+                ("class:button.arrow", self.left_symbol, handler),
+                ("[SetCursorPosition]", ""),
+                ("class:button.text", text, handler),
+                ("class:button.arrow", self.right_symbol, handler),
+            ]
 
     def _get_key_bindings(self) -> KeyBindings:
         "Key bindings for the Button."
