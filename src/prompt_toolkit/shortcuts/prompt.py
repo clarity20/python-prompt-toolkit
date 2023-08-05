@@ -571,9 +571,9 @@ class PromptSession(Generic[_T]):
                 dont_extend_height=True,
                 height=Dimension(min=1),
             ),
-            filter=~is_done
-            & renderer_height_is_known
-            & Condition(lambda: self.bottom_toolbar is not None),
+            filter=Condition(lambda: self.bottom_toolbar is not None)
+            & ~is_done
+            & renderer_height_is_known,
         )
 
         search_toolbar = SearchToolbar(
@@ -1393,6 +1393,7 @@ def prompt(
     enable_open_in_editor: FilterOrBool | None = None,
     tempfile_suffix: str | Callable[[], str] | None = None,
     tempfile: str | Callable[[], str] | None = None,
+    in_thread: bool = False,
     # Following arguments are specific to the current `prompt()` call.
     default: str = "",
     accept_default: bool = False,
@@ -1447,6 +1448,7 @@ def prompt(
         default=default,
         accept_default=accept_default,
         pre_run=pre_run,
+        in_thread=in_thread,
     )
 
 
