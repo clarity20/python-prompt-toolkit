@@ -51,7 +51,7 @@ def yes_no_dialog(
     yes_text: str = "Yes",
     no_text: str = "No",
     style: BaseStyle | None = None,
-    addHotkeys: bool = False,
+    force_hotkeys: bool = False,
 ) -> Application[bool]:
     """
     Display a Yes/No dialog.
@@ -68,8 +68,8 @@ def yes_no_dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=yes_text, handler=yes_handler, addHotkey=addHotkeys),
-            Button(text=no_text, handler=no_handler, addHotkey=addHotkeys),
+            Button(text=yes_text, handler=yes_handler, force_hotkey=force_hotkeys),
+            Button(text=no_text, handler=no_handler, force_hotkey=force_hotkeys),
         ],
         with_background=True,
     )
@@ -85,7 +85,7 @@ def button_dialog(
     text: AnyFormattedText = "",
     buttons: list[tuple[str, _T]] = [],
     style: BaseStyle | None = None,
-    addHotkeys: bool = False,
+    force_hotkeys: bool = False,
 ) -> Application[_T]:
     """
     Display a dialog with button choices (given as a list of tuples).
@@ -99,7 +99,7 @@ def button_dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
         buttons=[
-            Button(text=t, handler=functools.partial(button_handler, v), addHotkey=addHotkeys)
+            Button(text=t, handler=functools.partial(button_handler, v), force_hotkey=force_hotkeys)
             for t, v in buttons
         ],
         with_background=True,
@@ -118,7 +118,7 @@ def input_dialog(
     password: FilterOrBool = False,
     style: BaseStyle | None = None,
     default: str = "",
-    addHotkeys: bool = False,
+    force_hotkeys: bool = False,
 ) -> Application[str]:
     """
     Display a text input box.
@@ -132,8 +132,8 @@ def input_dialog(
     def ok_handler(event: E | None = None) -> None:
         get_app().exit(result=textfield.text)
 
-    ok_button = Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys)
-    cancel_button = Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys)
+    ok_button = Button(text=ok_text, handler=ok_handler, force_hotkey=force_hotkeys)
+    cancel_button = Button(text=cancel_text, handler=_return_none, force_hotkey=force_hotkeys)
 
     textfield = TextArea(
         text=default,
@@ -166,7 +166,7 @@ def message_dialog(
     text: AnyFormattedText = "",
     ok_text: str = "Ok",
     style: BaseStyle | None = None,
-    addHotKey: bool = False,
+    force_hotKey: bool = False,
 ) -> Application[None]:
     """
     Display a simple message box and wait until the user presses enter.
@@ -174,7 +174,7 @@ def message_dialog(
     dialog = Dialog(
         title=title,
         body=Label(text=text, dont_extend_height=True),
-        buttons=[Button(text=ok_text, handler=_return_none, addHotkey=addHotkey)],
+        buttons=[Button(text=ok_text, handler=_return_none, force_hotkey=force_hotkey)],
         with_background=True,
     )
 
@@ -189,7 +189,7 @@ def radiolist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default: _T | None = None,
     style: BaseStyle | None = None,
-    addHotkeys: bool = False,
+    force_hotkeys: bool = False,
 ) -> Application[_T]:
     """
     Display a simple list of element the user can choose amongst.
@@ -212,8 +212,8 @@ def radiolist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys),
-            Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys),
+            Button(text=ok_text, handler=ok_handler, force_hotkey=force_hotkeys),
+            Button(text=cancel_text, handler=_return_none, force_hotkey=force_hotkeys),
         ],
         with_background=True,
     )
@@ -229,7 +229,7 @@ def checkboxlist_dialog(
     values: Sequence[tuple[_T, AnyFormattedText]] | None = None,
     default_values: Sequence[_T] | None = None,
     style: BaseStyle | None = None,
-    addHotkeys: bool = False,
+    force_hotkeys: bool = False,
 ) -> Application[list[_T]]:
     """
     Display a simple list of element the user can choose multiple values amongst.
@@ -252,8 +252,8 @@ def checkboxlist_dialog(
             padding=1,
         ),
         buttons=[
-            Button(text=ok_text, handler=ok_handler, addHotkey=addHotkeys),
-            Button(text=cancel_text, handler=_return_none, addHotkey=addHotkeys),
+            Button(text=ok_text, handler=ok_handler, force_hotkey=force_hotkeys),
+            Button(text=cancel_text, handler=_return_none, force_hotkey=force_hotkeys),
         ],
         with_background=True,
     )

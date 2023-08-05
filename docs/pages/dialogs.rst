@@ -133,15 +133,20 @@ The :func:`~prompt_toolkit.shortcuts.checkboxlist_dialog` has the same usage and
 Hotkeys
 -------
 
-Button dialogs and all dialogs having Yes/No or Ok/Cancel buttons can be
-enhanced with hotkey letter mappings enabling single-letter button activation
-from the keyboard. Enable this feature by adding the default parameter
-``addHotkeys=True``
+An instance of :class:`~prompt_toolkit.widgets.Dialog` containing one or more
+Buttons can be enhanced with a hotkey letter mapping to enable activation of
+buttons by a single keypress from of the user.
 
-when creating the dialog. By default, the hotkeys will be mapped according to
-the first letter of each button's text, but you can override this when defining
-the text itself: ``text='Open &File'`` will cause f to be the hotkey instead
-of o.
+By default, a Button will be assigned a hotkey only if the button text includes
+a '&' symbol preceding the letter to be used as the hotkey. For instance,
+``text='Open &File'`` However, if the developer includes the optional parameter
+``force_hotkeys=True`` when constructing the Dialog, then every Button will be
+assigned a hotkey even if none is explicitly specified for some of them (or all
+of them). For such Buttons the first letter of the text will be the hotkey.
+
+For backward compatibility, if the developer omits the aforesaid
+``force_hotkeys`` argument and the '&' indicator from all button text, then no
+hotkeys will be configured.
 
 Styling of dialogs
 ------------------

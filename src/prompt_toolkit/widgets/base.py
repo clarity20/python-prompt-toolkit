@@ -17,6 +17,7 @@ from __future__ import annotations
 from platform import system
 from functools import partial
 from typing import Callable, Generic, Sequence, TypeVar
+from re import search
 
 from prompt_toolkit.application.current import get_app
 from prompt_toolkit.auto_suggest import AutoSuggest, DynamicAutoSuggest
@@ -392,11 +393,12 @@ class Button:
         parameters are passed to this callable. Use for instance Python's
         `functools.partial` to pass parameters to this callable if needed.
     :param width: Width of the button.
-    :param addHotkey: Whether to set a hotkey for the button; default = False.
-        If True, the creator can indicate the hotkey by including the
-        HOTKEY_INDICATOR symbol in the button text, as in text="Open &File".
-        By default the first letter of the text will be used.
+    :param force_hotkey: whether to use the first letter of the button text as
+        the hotkey if no hotkey has been explicitly specified (with the
+        HOTKEY_INDICATOR). When this parameter is set to False, a hotkey must
+        be explicitly specified to be created.
     """
+
     HOTKEY_INDICATOR = '&'
 
     def __init__(
@@ -406,23 +408,19 @@ class Button:
         width: int = 12,
         left_symbol: str = "<",
         right_symbol: str = ">",
-        addHotkey: bool = False,
+        force_hotkey: bool = False,
     ) -> None:
 
-        if addHotkey:
-            if Button.HOTKEY_INDICATOR in text:
-                self.hotkeyPosition = text.index(Button.HOTKEY_INDICATOR)
-            else:
-                text = '{}{}'.format(Button.HOTKEY_INDICATOR, text)
-                self.hotkeyPosition = 0
-        else:
-            self.hotkeyPosition = -1
-
-        self.text = text.replace(Button.HOTKEY_INDICATOR, '')
+        self.text = text
         self.left_symbol = left_symbol
         self.right_symbol = right_symbol
         self.handler = handler
         self.width = width
+        hotkey = search(Button.HOTKEY_INDICATOR + r'(.)', text)
+        self.hotkey = hotkey.group(1)  if hotkey \
+                 else text[0]     if force_hotkey \
+                 else None
+
         self.control = FormattedTextControl(
             self._get_text_fragments,
             key_bindings=self._get_key_bindings(),
@@ -452,11 +450,12 @@ class Button:
         )
 
     def _get_text_fragments(self) -> StyleAndTextTuples:
-        offset = (self.width - 2 - len(self.text)) // 2
         width = self.width - (
             get_cwidth(self.left_symbol) + get_cwidth(self.right_symbol)
         )
-        text = (f"{{:^{width}}}").format(self.text)
+        text = self.text.replace(Button.HOTKEY_INDICATOR, '')
+        text_offset = (width - len(text)) // 2
+        text_shown = (f"{{:^{width}}}").format(text)
 
         def handler(mouse_event: MouseEvent) -> None:
             if (
@@ -465,15 +464,17 @@ class Button:
             ):
                 self.handler()
 
-        if self.hotkeyPosition >= 0:
-            # Provide a visual clue as to the hotkey
-            highlight = 'fg:red bg:yellow' if system() == 'Windows' else 'underline'
+        if self.hotkey:
+            # Include a visual cue for the hotkey
+            visual_cue = 'fg:red bg:yellow' if system() == 'Windows' else 'underline'
+            hotkey = search(Button.HOTKEY_INDICATOR + self.hotkey, self.text)
+            hotkey_position = hotkey.start() if hotkey else 0
             return [
                 ('class:button.arrow', self.left_symbol, handler),
                 ('[SetCursorPosition]', ''),
-                ('class:button.text', text[: self.hotkeyPosition + offset], handler),
-                (highlight, text[self.hotkeyPosition + offset], handler),
-                ('class:button.text', text[self.hotkeyPosition + offset + 1 :], handler),
+                ('class:button.text', text_shown[: hotkey_position + text_offset], handler),
+                (visual_cue, text_shown[hotkey_position + text_offset], handler),
+                ('class:button.text', text_shown[hotkey_position + text_offset + 1 :], handler),
                 ('class:button.arrow', self.right_symbol, handler),
                     ]
         else:
@@ -481,7 +482,7 @@ class Button:
             return [
                 ("class:button.arrow", self.left_symbol, handler),
                 ("[SetCursorPosition]", ""),
-                ("class:button.text", text, handler),
+                ("class:button.text", text_shown, handler),
                 ("class:button.arrow", self.right_symbol, handler),
             ]
 

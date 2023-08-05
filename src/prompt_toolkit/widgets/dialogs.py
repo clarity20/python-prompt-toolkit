@@ -63,10 +63,9 @@ class Dialog:
 
         # Create a hotkey for every button where a hotkey is indicated.
         for button in buttons:
-            if button.hotkeyPosition >= 0:
-                key = button.text[button.hotkeyPosition]
-                buttons_kb.add(key.upper())(button.handler)
-                buttons_kb.add(key.lower())(button.handler)
+            if button.hotkey:
+                buttons_kb.add(button.hotkey.upper())(button.handler)
+                buttons_kb.add(button.hotkey.lower())(button.handler)
 
         frame_body: AnyContainer
         if buttons:
